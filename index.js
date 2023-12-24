@@ -36,7 +36,7 @@ const pngIndirVeKaydet = (url, dosyaYolu) => {
 };
 
 const stickerIndir = async (i) => {
-  const url = `https://vkklub.ru/_data/stickers/scott/sticker_vk_scott_${i.toString().padStart(3, '0')}.png`;
+  const url = `https://vkklub.ru/_data/stickers/cottagermarina/sticker_vk_`+`cottagermarina`+`_${i.toString().padStart(3, '0')}.png`;
   const dosyaAdiWebp = `stickers/${i}.webp`;
 
   // İlk çıkartmayı "unnamed.png" olarak indir ve kaydet
@@ -104,16 +104,29 @@ const getEmojiForSticker = (i) => {
   return emojiListesi[i] || "❓"; // Eğer indeks listede yoksa varsayılan olarak "❓" döndür
 };
 
-const wastickersOlustur = async () => {
-  const baslangicNumarasi = 0;
-  const bitisNumarasi = 24;
 
+const baslangicNumarasi = 0;
+const bitisNumarasi = 29;
+const wastickersOlustur = async () => {
   if (!fs.existsSync('stickers')) {
     fs.mkdirSync('stickers');
+  } else {
+    // Stickers klasörü varsa içeriğini temizle
+    fs.readdirSync('stickers').forEach((dosya) => {
+      const dosyaYolu = `stickers/${dosya}`;
+      if (fs.lstatSync(dosyaYolu).isDirectory()) {
+        // Alt klasörü temizle
+        fs.rmdirSync(dosyaYolu, { recursive: true });
+      } else {
+        // Dosyayı sil
+        fs.unlinkSync(dosyaYolu);
+      }
+    });
   }
 
   await Promise.all(Array.from({ length: bitisNumarasi - baslangicNumarasi + 1 }, (_, i) => stickerIndir(i + baslangicNumarasi)));
   await stickersJSONOlustur(baslangicNumarasi, bitisNumarasi);
+
 
   // Diğer dosyaları oluştur
   fs.writeFileSync('stickers/author.txt', '@codermert');
