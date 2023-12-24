@@ -4,45 +4,50 @@ const sharp = require('sharp');
 const archiver = require('archiver');
 
 const stickerIndir = async (i) => {
-  const url = `https://vkklub.ru/_data/stickers/vector/sticker_vk_vector_${i.toString().padStart(3, '0')}.png`;
-  const dosyaAdi = `stickers/${i}.webp`;
-
-  return new Promise((resolve, reject) => {
-    https.get(url, (response) => {
-      const parcalar = [];
-
-      response.on('data', (parca) => {
-        parcalar.push(parca);
+    const url = `https://vkklub.ru/_data/stickers/ice/sticker_vk_ice_${i.toString().padStart(3, '0')}.png`;
+    const dosyaAdi = `stickers/${i}.webp`;
+  
+    return new Promise((resolve, reject) => {
+      https.get(url, (response) => {
+        const parcalar = [];
+  
+        response.on('data', (parca) => {
+          parcalar.push(parca);
+        });
+  
+        response.on('end', () => {
+          const buffer = Buffer.concat(parcalar);
+  
+          if (i === 0) {
+            fs.writeFileSync('stickers/unnamed.png', buffer);
+          }
+  
+          sharp(buffer)
+            .toFormat('webp')
+            .toFile(dosyaAdi, (hata, bilgi) => {
+              if (hata) {
+                reject(hata);
+              } else {
+                resolve(bilgi);
+              }
+            });
+        });
+      }).on('error', (hata) => {
+        reject(hata);
       });
-
-      response.on('end', () => {
-        const buffer = Buffer.concat(parcalar);
-
-        sharp(buffer)
-          .toFormat('webp')
-          .toFile(dosyaAdi, (hata, bilgi) => {
-            if (hata) {
-              reject(hata);
-            } else {
-              resolve(bilgi);
-            }
-          });
-      });
-    }).on('error', (hata) => {
-      reject(hata);
     });
-  });
-};
-
-const stickersJSONOlustur = async (baslangicNumarasi, bitisNumarasi) => {
-  const stickersBilgi = {
-    link: "https://play.google.com/store/apps/details?id=com.marsvard.stickermakerforwhatsapp",
-    name: "Вектор",
-    author: "codermert",
-    thumbnail: "unnamed.png",
-    stickers: [],
-    info: "codermert tarafından geliştirilmiştir"
   };
+  
+  const stickersJSONOlustur = async (baslangicNumarasi, bitisNumarasi) => {
+    const stickersBilgi = {
+      link: "https://play.google.com/store/apps/details?id=com.marsvard.stickermakerforwhatsapp",
+      name: "ВКонтакте",
+      author: "codermert",
+      thumbnail: "unnamed.png", // Set the thumbnail to "unnamed.png"
+      stickers: [],
+      info: "codermert tarafından geliştirilmiştir"
+    };
+  
 
   for (let i = baslangicNumarasi; i <= bitisNumarasi; i++) {
     const emoji = getEmojiForSticker(i);
