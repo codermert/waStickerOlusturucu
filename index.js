@@ -3,47 +3,66 @@ const fs = require('fs');
 const sharp = require('sharp');
 const archiver = require('archiver');
 
-const stickerIndir = async (i) => {
-    const url = `https://vkklub.ru/_data/stickers/ice/sticker_vk_ice_${i.toString().padStart(3, '0')}.png`;
-    const dosyaAdi = `stickers/${i}.webp`;
-  
-    return new Promise((resolve, reject) => {
-      https.get(url, (response) => {
-        const parcalar = [];
-  
-        response.on('data', (parca) => {
-          parcalar.push(parca);
+const pngIndirVeKaydet = (url, dosyaYolu) => {
+  return new Promise((resolve, reject) => {
+    const dosya = fs.createWriteStream(dosyaYolu);
+
+    https.get(url, (response) => {
+      response.pipe(dosya);
+
+      dosya.on('finish', () => {
+        dosya.close(() => {
+          resolve();
         });
-  
-        response.on('end', () => {
-          const buffer = Buffer.concat(parcalar);
-  
-          if (i === 0) {
-            fs.writeFileSync('stickers/unnamed.png', buffer);
-          }
-  
-          sharp(buffer)
-            .toFormat('webp')
-            .toFile(dosyaAdi, (hata, bilgi) => {
-              if (hata) {
-                reject(hata);
-              } else {
-                resolve(bilgi);
-              }
-            });
-        });
-      }).on('error', (hata) => {
-        reject(hata);
       });
+    }).on('error', (hata) => {
+      fs.unlink(dosyaYolu, () => reject(hata)); // Hata durumunda dosyayı sil
     });
-  };
+  });
+};
+
+const stickerIndir = async (i) => {
+  const url = `https://vkklub.ru/_data/stickers/ice/sticker_vk_ice_${i.toString().padStart(3, '0')}.png`;
+  const dosyaAdiWebp = `stickers/${i}.webp`;
+
+  // İlk çıkartmayı "unnamed.png" olarak indir ve kaydet
+  if (i === 0) {
+    await pngIndirVeKaydet(url, 'stickers/unnamed.png');
+  }
+
+  return new Promise((resolve, reject) => {
+    https.get(url, (response) => {
+      const parcalar = [];
+
+      response.on('data', (parca) => {
+        parcalar.push(parca);
+      });
+
+      response.on('end', () => {
+        const buffer = Buffer.concat(parcalar);
+
+        sharp(buffer)
+          .toFormat('webp')
+          .toFile(dosyaAdiWebp, (hata, bilgi) => {
+            if (hata) {
+              reject(hata);
+            } else {
+              resolve(bilgi);
+            }
+          });
+      });
+    }).on('error', (hata) => {
+      reject(hata);
+    });
+  });
+};
   
   const stickersJSONOlustur = async (baslangicNumarasi, bitisNumarasi) => {
     const stickersBilgi = {
       link: "https://play.google.com/store/apps/details?id=com.marsvard.stickermakerforwhatsapp",
       name: "ВКонтакте",
       author: "codermert",
-      thumbnail: "unnamed.png", // Set the thumbnail to "unnamed.png"
+      thumbnail: "unnamed.png", 
       stickers: [],
       info: "codermert tarafından geliştirilmiştir"
     };
@@ -85,7 +104,7 @@ const wastickersOlustur = async () => {
   // Diğer dosyaları oluştur
   fs.writeFileSync('stickers/author.txt', '@codermert');
   fs.writeFileSync('stickers/link.txt', 'https://github.com/codermert');
-  fs.writeFileSync('stickers/title.txt', 'Вектор');
+  fs.writeFileSync('stickers/title.txt', 'ВКонтакте');
 
   // Zip dosyası oluştur
   const cikti = fs.createWriteStream('stickers.wastickers');
