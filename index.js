@@ -5,28 +5,42 @@ const archiver = require('archiver');
 
 const pngIndirVeKaydet = (url, dosyaYolu) => {
   return new Promise((resolve, reject) => {
-    const dosya = fs.createWriteStream(dosyaYolu);
+    const indirilenDosyaYolu = dosyaYolu.replace('.png', '_temp.png');
+
+    const dosya = fs.createWriteStream(indirilenDosyaYolu);
 
     https.get(url, (response) => {
       response.pipe(dosya);
 
       dosya.on('finish', () => {
         dosya.close(() => {
-          resolve();
+          // Şimdi dosyayı 96x96 boyutuna boyutlandır ve orijinal dosya adına kaydet
+          sharp(indirilenDosyaYolu)
+            .resize(96, 96)
+            .toFile(dosyaYolu, (hata, bilgi) => {
+              // Geçici dosyayı silelim
+              fs.unlink(indirilenDosyaYolu, () => {
+                if (hata) {
+                  reject(hata);
+                } else {
+                  resolve();
+                }
+              });
+            });
         });
       });
     }).on('error', (hata) => {
-      fs.unlink(dosyaYolu, () => reject(hata)); // Hata durumunda dosyayı sil
+      fs.unlink(indirilenDosyaYolu, () => reject(hata)); // Hata durumunda geçici dosyayı sil
     });
   });
 };
 
 const stickerIndir = async (i) => {
-  const url = `https://vkklub.ru/_data/stickers/ice/sticker_vk_ice_${i.toString().padStart(3, '0')}.png`;
+  const url = `https://vkklub.ru/_data/stickers/scott/sticker_vk_scott_${i.toString().padStart(3, '0')}.png`;
   const dosyaAdiWebp = `stickers/${i}.webp`;
 
   // İlk çıkartmayı "unnamed.png" olarak indir ve kaydet
-  if (i === 0) {
+  if (i === 1) {
     await pngIndirVeKaydet(url, 'stickers/unnamed.png');
   }
 
@@ -92,7 +106,7 @@ const getEmojiForSticker = (i) => {
 
 const wastickersOlustur = async () => {
   const baslangicNumarasi = 0;
-  const bitisNumarasi = 29;
+  const bitisNumarasi = 24;
 
   if (!fs.existsSync('stickers')) {
     fs.mkdirSync('stickers');
