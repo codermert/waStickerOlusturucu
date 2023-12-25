@@ -35,8 +35,12 @@ const pngIndirVeKaydet = (url, dosyaYolu) => {
   });
 };
 
+const baslangicNumarasi = 0;
+const bitisNumarasi = 29;
+const stickerAdi = "toshi";
+
 const stickerIndir = async (i) => {
-  const url = `https://vkklub.ru/_data/stickers/cottagermarina/sticker_vk_`+`cottagermarina`+`_${i.toString().padStart(3, '0')}.png`;
+  const url = `https://vkklub.ru/_data/stickers/`+stickerAdi+`/sticker_vk_`+stickerAdi+`_${i.toString().padStart(3, '0')}.png`;
   const dosyaAdiWebp = `stickers/${i}.webp`;
 
   // İlk çıkartmayı "unnamed.png" olarak indir ve kaydet
@@ -104,9 +108,6 @@ const getEmojiForSticker = (i) => {
   return emojiListesi[i] || "❓"; // Eğer indeks listede yoksa varsayılan olarak "❓" döndür
 };
 
-
-const baslangicNumarasi = 0;
-const bitisNumarasi = 29;
 const wastickersOlustur = async () => {
   if (!fs.existsSync('stickers')) {
     fs.mkdirSync('stickers');
